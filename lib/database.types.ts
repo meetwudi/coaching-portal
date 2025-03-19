@@ -1,0 +1,122 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          first_name: string | null
+          last_name: string | null
+          role: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          first_name?: string | null
+          last_name?: string | null
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string | null
+          last_name?: string | null
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      sessions: {
+        Row: {
+          id: string
+          user_id: string
+          total_sessions: number
+          used_sessions: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          total_sessions?: number
+          used_sessions?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          total_sessions?: number
+          used_sessions?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      notes: {
+        Row: {
+          id: string
+          user_id: string
+          admin_id: string
+          title: string
+          content: string
+          is_read: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          admin_id: string
+          title: string
+          content: string
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          admin_id?: string
+          title?: string
+          content?: string
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      invitations: {
+        Row: {
+          id: string
+          email: string
+          token: string
+          admin_id: string
+          is_accepted: boolean
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          token: string
+          admin_id: string
+          is_accepted?: boolean
+          created_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          token?: string
+          admin_id?: string
+          is_accepted?: boolean
+          created_at?: string
+          expires_at?: string
+        }
+      }
+    }
+  }
+}
+
