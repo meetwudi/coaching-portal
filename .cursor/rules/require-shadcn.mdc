@@ -3,4 +3,4 @@ description:
 globs: *.tsx
 alwaysApply: false
 ---
-Only use shadcn as the UI library for this project. Do NOT add additional UI libraries.
+For this project, use shadcn exclusively as the UI library. When writing frontend components, ensure they are elegant, small, and concise, with the React part not exceeding 100 lines.
