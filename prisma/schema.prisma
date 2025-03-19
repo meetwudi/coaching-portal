@@ -4,9 +4,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
-  schemas  = ["auth", "public"]
+  provider  = "postgresql"
+  url       = env("POSTGRES_URL_NON_POOLING")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+  schemas   = ["auth", "public"]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -324,7 +325,7 @@ model users {
   notes_notes_admin_idTousers notes[]           @relation("notes_admin_idTousers")
   notes_notes_user_idTousers  notes[]           @relation("notes_user_idTousers")
   profiles                    profiles?
-  coachingSessions            public_sessions[]
+  coaching_sessions           public_sessions[]
 
   @@index([instance_id])
   @@index([is_anonymous])

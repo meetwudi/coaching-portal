@@ -1,93 +1,52 @@
-import Link from "next/link"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { formatDate } from "@/lib/utils"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
+import { profiles, public_sessions } from "@prisma/client";
+
+type StudentWithRelations = profiles & {
+  users: {
+    email: string | null;
+    coaching_sessions: Pick<
+      public_sessions,
+      "total_sessions" | "used_sessions"
+    >[];
+  } | null;
+};
 
 export default async function StudentsPage() {
-  const supabase = createServerSupabaseClient()
-
-  // First, let's check all profiles with role=student
-  const { data: studentProfiles, error: profilesError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("role", "student")
-
-  // Get all students with their session counts - using a different approach
-  const { data: students, error: studentsError } = await supabase
-    .from("profiles")
-    .select(`
-      id,
-      first_name,
-      last_name,
-      created_at,
-      role
-    `)
-    .eq("role", "student")
-    .order("created_at", { ascending: false })
-
-  // If we have students, let's get their emails and sessions separately
-  let studentsWithData = []
-
-  if (students && students.length > 0) {
-    // Create an array to hold the enhanced student data
-    studentsWithData = await Promise.all(
-      students.map(async (student) => {
-        // Try multiple approaches to get the user email
-        let email = "No email found"
-        
-        // First try using the admin API
-        try {
-          const { data: authUser } = await supabase.auth.admin.getUserById(student.id)
-          if (authUser?.user?.email) {
-            email = authUser.user.email
-          }
-        } catch (error) {
-          console.error("Error fetching email with admin.getUserById:", error)
-        }
-
-        // If that didn't work, try to get it from invitations
-        if (email === "No email found") {
-          try {
-            const { data: invitation } = await supabase
-              .from("invitations")
-              .select("email")
-              .eq("is_accepted", true)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .single()
-
-            if (invitation?.email) {
-              email = invitation.email
-            }
-          } catch (inviteError) {
-            console.error("Error fetching email from invitations:", inviteError)
-          }
-        }
-
-        // Get the sessions data
-        const { data: sessionData } = await supabase
-          .from("sessions")
-          .select("total_sessions, used_sessions")
-          .eq("user_id", student.id)
-          .single()
-
-        // Return the combined data
-        return {
-          ...student,
-          email,
-          sessions: sessionData || { total_sessions: 0, used_sessions: 0 },
-        }
-      }),
-    )
-  }
+  // Get all students with their user data and sessions
+  const students = (await prisma.profiles.findMany({
+    where: {
+      role: "student",
+    },
+    include: {
+      users: {
+        select: {
+          email: true,
+          coaching_sessions: {
+            select: {
+              total_sessions: true,
+              used_sessions: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  })) as StudentWithRelations[];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Students</h2>
-          <p className="text-muted-foreground">Manage your coaching students and their sessions</p>
+          <p className="text-muted-foreground">
+            Manage your coaching students and their sessions
+          </p>
         </div>
         <Link href="/admin/invitations">
           <Button>Invite Student</Button>
@@ -95,8 +54,8 @@ export default async function StudentsPage() {
       </div>
 
       <div className="grid gap-4">
-        {studentsWithData && studentsWithData.length > 0 ? (
-          studentsWithData.map((student: any) => (
+        {students && students.length > 0 ? (
+          students.map((student) => (
             <Card key={student.id}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -106,15 +65,28 @@ export default async function StudentsPage() {
                         ? `${student.first_name} ${student.last_name}`
                         : "Unnamed Student"}
                     </p>
-                    <p className="text-sm text-muted-foreground">{student.email}</p>
-                    <p className="text-sm text-muted-foreground">Joined: {formatDate(student.created_at)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {student.users?.email || "No email found"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Joined:{" "}
+                      {student.created_at
+                        ? formatDate(student.created_at)
+                        : "Unknown"}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="text-sm font-medium">Sessions</p>
                       <p className="text-sm text-muted-foreground">
-                        {student.sessions
-                          ? `${student.sessions.used_sessions || 0} / ${student.sessions.total_sessions || 0}`
+                        {student.users?.coaching_sessions?.[0]
+                          ? `${
+                              student.users.coaching_sessions[0]
+                                .used_sessions || 0
+                            } / ${
+                              student.users.coaching_sessions[0]
+                                .total_sessions || 0
+                            }`
                           : "0 / 0"}
                       </p>
                     </div>
@@ -133,6 +105,5 @@ export default async function StudentsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
-

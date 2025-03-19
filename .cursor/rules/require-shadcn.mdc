@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+Only use shadcn as the UI library for this project. Do NOT add additional UI libraries.
