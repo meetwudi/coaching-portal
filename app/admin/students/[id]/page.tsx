@@ -1,93 +1,88 @@
-import { notFound } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatDate } from "@/lib/utils"
-import SessionsManager from "./sessions-manager"
-import AddNoteForm from "./add-note-form"
-import DeleteNoteButton from "@/components/delete-note-button"
+import { notFound } from "next/navigation";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import SessionsManager from "./sessions-manager";
+import AddNoteForm from "./add-note-form";
+import DeleteNoteButton from "@/components/delete-note-button";
 
 interface StudentPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{
+    id: string;
+  }>;
 }
 
-export default async function StudentPage({ params }: StudentPageProps) {
-  const supabase = createServerSupabaseClient()
+export default async function StudentPage({
+  params: paramsPromise,
+}: StudentPageProps) {
+  const params = await paramsPromise;
+  const supabase = createServerSupabaseClient();
 
   // Get student profile
   const { data: student, error: studentError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", params.id)
-    .single()
+    .single();
 
   if (!student || studentError) {
-    notFound()
+    notFound();
   }
 
   // Get student email - using multiple approaches
-  let studentEmail = ""
+  let studentEmail = "";
+  console.log("Student ID:", params.id);
 
   // First try using the admin API
   try {
-    const { data: authUser } = await supabase.auth.admin.getUserById(params.id)
-    studentEmail = authUser?.user?.email || ""
-    console.log("Email from admin.getUserById:", studentEmail)
+    const { data: authUser } = await supabase.auth.admin.getUserById(params.id);
+    studentEmail = authUser?.user?.email || "";
+    console.log("Email from admin.getUserById:", studentEmail);
   } catch (error) {
-    console.error("Error fetching student email with admin.getUserById:", error)
+    console.error(
+      "Error fetching student email with admin.getUserById:",
+      error
+    );
   }
 
   // If that didn't work, try listing all users
   if (!studentEmail) {
     try {
-      const { data: allUsers } = await supabase.auth.admin.listUsers()
-      const matchingUser = allUsers?.users?.find((user) => user.id === params.id)
-      studentEmail = matchingUser?.email || ""
-      console.log("Email from admin.listUsers:", studentEmail)
+      const { data: allUsers } = await supabase.auth.admin.listUsers();
+      const matchingUser = allUsers?.users?.find(
+        (user) => user.id === params.id
+      );
+      studentEmail = matchingUser?.email || "";
+      console.log("Email from admin.listUsers:", studentEmail);
     } catch (fallbackError) {
-      console.error("Error fetching student email with admin.listUsers:", fallbackError)
+      console.error(
+        "Error fetching student email with admin.listUsers:",
+        fallbackError
+      );
     }
   }
 
-  // If we still don't have an email, try to get it from the invitations table
-  if (!studentEmail) {
-    try {
-      // Find invitations that match this user's ID through the admin_id field
-      const { data: invitations } = await supabase
-        .from("invitations")
-        .select("email, is_accepted, admin_id")
-        .eq("is_accepted", true)
-        .order("created_at", { ascending: false })
-
-      console.log("Found invitations:", invitations)
-
-      // If we have invitations, try to match one to this student
-      if (invitations && invitations.length > 0) {
-        // We need to find a way to match the invitation to this student
-        // One approach is to look at the student's profile creation date
-        // and find an invitation that was accepted around the same time
-
-        // For now, let's just use the most recent accepted invitation as a fallback
-        studentEmail = invitations[0].email
-        console.log("Email from invitations:", studentEmail)
-      }
-    } catch (inviteError) {
-      console.error("Error fetching email from invitations:", inviteError)
-    }
-  }
-
-  console.log("Final student email:", studentEmail)
+  console.log("Final student email:", studentEmail);
 
   // Get student sessions
-  const { data: sessions } = await supabase.from("sessions").select("*").eq("user_id", params.id).single()
+  const { data: sessions } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("user_id", params.id)
+    .single();
 
   // Get notes for this student - using a simpler approach
   const { data: notes } = await supabase
     .from("notes")
     .select("*")
     .eq("user_id", params.id)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   // For each note, get the admin profile separately
   const notesWithAdmins = await Promise.all(
@@ -96,32 +91,38 @@ export default async function StudentPage({ params }: StudentPageProps) {
         .from("profiles")
         .select("first_name, last_name")
         .eq("id", note.admin_id)
-        .single()
+        .single();
 
       return {
         ...note,
         admin: adminProfile || { first_name: "Unknown", last_name: "Admin" },
-      }
-    }),
-  )
+      };
+    })
+  );
 
   // Check if we need to create a sessions record
-  const needsSessionsRecord = !sessions
+  const needsSessionsRecord = !sessions;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">
-          {student.first_name && student.last_name ? `${student.first_name} ${student.last_name}` : "Unnamed Student"}
+          {student.first_name && student.last_name
+            ? `${student.first_name} ${student.last_name}`
+            : "Unnamed Student"}
         </h2>
-        <p className="text-muted-foreground">{studentEmail || "No email available"}</p>
+        <p className="text-muted-foreground">
+          {studentEmail || "No email available"}
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Student Information</CardTitle>
-            <CardDescription>Basic information about this student</CardDescription>
+            <CardDescription>
+              Basic information about this student
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-1">
@@ -146,7 +147,9 @@ export default async function StudentPage({ params }: StudentPageProps) {
           <CardContent>
             <SessionsManager
               studentId={params.id}
-              initialSessions={sessions || { total_sessions: 0, used_sessions: 0 }}
+              initialSessions={
+                sessions || { total_sessions: 0, used_sessions: 0 }
+              }
               needsSessionsRecord={needsSessionsRecord}
             />
           </CardContent>
@@ -165,8 +168,8 @@ export default async function StudentPage({ params }: StudentPageProps) {
             <div className="p-4 bg-yellow-50 text-yellow-800 rounded-md">
               <p className="font-medium">Cannot send email notifications</p>
               <p className="text-sm">
-                No email address is available for this student. Notes can still be added, but email notifications will
-                not be sent.
+                No email address is available for this student. Notes can still
+                be added, but email notifications will not be sent.
               </p>
               <div className="mt-4">
                 <AddNoteForm studentId={params.id} studentEmail="" />
@@ -187,11 +190,18 @@ export default async function StudentPage({ params }: StudentPageProps) {
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold">{note.title}</h4>
                       <div className="flex items-center">
-                        <p className="text-sm text-muted-foreground mr-4">{formatDate(note.created_at)}</p>
-                        <DeleteNoteButton noteId={note.id} noteTitle={note.title} />
+                        <p className="text-sm text-muted-foreground mr-4">
+                          {formatDate(note.created_at)}
+                        </p>
+                        <DeleteNoteButton
+                          noteId={note.id}
+                          noteTitle={note.title}
+                        />
                       </div>
                     </div>
-                    <p className="text-sm whitespace-pre-line">{note.content}</p>
+                    <p className="text-sm whitespace-pre-line">
+                      {note.content}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       By: {note.admin?.first_name} {note.admin?.last_name}
                     </p>
@@ -205,6 +215,5 @@ export default async function StudentPage({ params }: StudentPageProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
-
