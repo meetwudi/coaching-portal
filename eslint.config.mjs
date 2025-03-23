@@ -9,6 +9,9 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
+// Import custom rules
+import supabaseImportRule from "./eslint-rules/supabase-import.mjs";
+
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
@@ -16,6 +19,15 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "react/no-unescaped-entities": "off",
+      // Add custom rules
+      "custom-rules/supabase-import": "error",
+    },
+    plugins: {
+      "custom-rules": {
+        rules: {
+          "supabase-import": supabaseImportRule,
+        },
+      },
     },
   },
 ];
