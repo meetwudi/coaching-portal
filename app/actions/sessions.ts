@@ -1,12 +1,14 @@
-"use server"
+"use server";
 
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import type { Database } from "@/lib/database.types"
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 
-export async function updateSessions(sessionId: string, totalSessions: number, usedSessions: number) {
+export async function updateSessions(
+  sessionId: string,
+  totalSessions: number,
+  usedSessions: number
+) {
   try {
-    const supabase = createServerActionClient<Database>({ cookies })
+    const supabase = createServerSupabaseClient();
 
     const { error } = await supabase
       .from("sessions")
@@ -14,37 +16,40 @@ export async function updateSessions(sessionId: string, totalSessions: number, u
         total_sessions: totalSessions,
         used_sessions: usedSessions,
       })
-      .eq("id", sessionId)
+      .eq("id", sessionId);
 
     if (error) {
-      throw error
+      throw error;
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error: any) {
-    console.error("Update sessions error:", error)
-    return { success: false, error: error.message }
+    console.error("Update sessions error:", error);
+    return { success: false, error: error.message };
   }
 }
 
-export async function createSessions(studentId: string, totalSessions: number, usedSessions: number) {
+export async function createSessions(
+  studentId: string,
+  totalSessions: number,
+  usedSessions: number
+) {
   try {
-    const supabase = createServerActionClient<Database>({ cookies })
+    const supabase = createServerSupabaseClient();
 
     const { error } = await supabase.from("sessions").insert({
       user_id: studentId,
       total_sessions: totalSessions,
       used_sessions: usedSessions,
-    })
+    });
 
     if (error) {
-      throw error
+      throw error;
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error: any) {
-    console.error("Create sessions error:", error)
-    return { success: false, error: error.message }
+    console.error("Create sessions error:", error);
+    return { success: false, error: error.message };
   }
 }
-

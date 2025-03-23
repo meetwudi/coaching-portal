@@ -1,23 +1,28 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
-import type { Database } from "@/lib/database.types"
+import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = createServerSupabaseClient();
 
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
-      return NextResponse.json({ error: error?.message || "User not found" }, { status: 401 })
+      return NextResponse.json(
+        { error: error?.message || "User not found" },
+        { status: 401 }
+      );
     }
 
     // Get user profile
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
 
     return NextResponse.json({
       id: user.id,
@@ -25,12 +30,14 @@ export async function GET() {
       first_name: profile?.first_name,
       last_name: profile?.last_name,
       role: profile?.role,
-    })
+    });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || "An error occurred while getting user information" },
-      { status: 500 },
-    )
+      {
+        error:
+          error.message || "An error occurred while getting user information",
+      },
+      { status: 500 }
+    );
   }
 }
-
