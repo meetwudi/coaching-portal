@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rule to restrict direct imports of createServerComponentClient
+ * @fileoverview Rule to restrict direct imports of Supabase clients
  */
 
 const supabaseImportRule = {
@@ -13,8 +13,12 @@ const supabaseImportRule = {
     fixable: "code",
     schema: [], // no options
     messages: {
-      directImport:
+      directComponentImport:
         "Import createServerSupabaseClient from '@/lib/supabase-server' instead of directly importing createServerComponentClient",
+      directRouteImport:
+        "Import createApiSupabaseClient from '@/lib/supabase-server' instead of directly importing createRouteHandlerClient",
+      directActionImport:
+        "Import createActionSupabaseClient from '@/lib/supabase-server' instead of directly importing createServerActionClient",
     },
   },
   create(context) {
@@ -26,22 +30,45 @@ const supabaseImportRule = {
 
           // Allow direct import only in supabase-server.ts
           if (!currentFilePath.endsWith("lib/supabase-server.ts")) {
-            // Check if importing createServerComponentClient
-            const hasCreateServerComponentClient = node.specifiers.some(
-              (specifier) =>
-                specifier.imported &&
-                specifier.imported.name === "createServerComponentClient"
-            );
+            // Check which Supabase client is being imported
+            const importedSpecifiers = node.specifiers
+              .filter((s) => s.imported)
+              .map((s) => s.imported.name);
 
-            if (hasCreateServerComponentClient) {
+            if (importedSpecifiers.includes("createServerComponentClient")) {
               context.report({
                 node,
-                messageId: "directImport",
+                messageId: "directComponentImport",
                 fix(fixer) {
-                  // Create a new import for createServerSupabaseClient
                   return fixer.replaceText(
                     node,
                     'import { createServerSupabaseClient } from "@/lib/supabase-server";'
+                  );
+                },
+              });
+            }
+
+            if (importedSpecifiers.includes("createRouteHandlerClient")) {
+              context.report({
+                node,
+                messageId: "directRouteImport",
+                fix(fixer) {
+                  return fixer.replaceText(
+                    node,
+                    'import { createApiSupabaseClient } from "@/lib/supabase-server";'
+                  );
+                },
+              });
+            }
+
+            if (importedSpecifiers.includes("createServerActionClient")) {
+              context.report({
+                node,
+                messageId: "directActionImport",
+                fix(fixer) {
+                  return fixer.replaceText(
+                    node,
+                    'import { createActionSupabaseClient } from "@/lib/supabase-server";'
                   );
                 },
               });

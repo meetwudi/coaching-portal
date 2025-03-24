@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createActionSupabaseClient } from "@/lib/supabase-server";
 
 export async function createNote(
   userId: string,
@@ -10,7 +10,7 @@ export async function createNote(
   createdByStudent = false
 ) {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = createActionSupabaseClient();
 
     const { data: note, error } = await supabase
       .from("notes")
@@ -42,7 +42,7 @@ export async function updateNote(
   content: string
 ) {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = createActionSupabaseClient();
 
     const { error } = await supabase
       .from("notes")
@@ -65,7 +65,7 @@ export async function updateNote(
 
 export async function deleteNote(noteId: string) {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = createActionSupabaseClient();
 
     const { error } = await supabase.from("notes").delete().eq("id", noteId);
 
