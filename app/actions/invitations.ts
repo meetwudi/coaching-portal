@@ -1,11 +1,11 @@
 "use server";
 
 import { generateToken } from "@/lib/utils";
-import { createActionSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function createInvitation(email: string) {
   try {
-    const supabase = createActionSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     // Get current user (admin)
     const {
@@ -40,7 +40,7 @@ export async function createInvitation(email: string) {
 
 export async function deleteInvitation(invitationId: string) {
   try {
-    const supabase = createActionSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("invitations")
@@ -60,7 +60,7 @@ export async function deleteInvitation(invitationId: string) {
 
 export async function updateInvitationDates(invitationId: string) {
   try {
-    const supabase = createActionSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     // Update the invitation's created_at and expires_at dates
     const now = new Date();

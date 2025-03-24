@@ -1,29 +1,33 @@
-import type React from "react"
-import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { MainNav } from "@/components/main-nav"
-import { MobileNav } from "@/components/mobile-nav"
-import { UserNav } from "@/components/user-nav"
-import { LayoutDashboard, FileText } from "lucide-react"
+import type React from "react";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { MainNav } from "@/components/main-nav";
+import { MobileNav } from "@/components/mobile-nav";
+import { UserNav } from "@/components/user-nav";
+import { LayoutDashboard, FileText } from "lucide-react";
 
 export default async function StudentLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect("/")
+    redirect("/");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
 
   if (!profile || profile.role !== "student") {
-    redirect("/")
+    redirect("/");
   }
 
   const navItems = [
@@ -37,7 +41,7 @@ export default async function StudentLayout({
       href: "/student/notes",
       icon: <FileText className="h-4 w-4" />,
     },
-  ]
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -46,7 +50,9 @@ export default async function StudentLayout({
           <div className="flex items-center gap-6">
             <div className="flex items-center">
               <MobileNav items={navItems} title="Career Coaching Portal" />
-              <h1 className="text-xl font-bold ml-2 md:ml-0">Career Coaching Portal</h1>
+              <h1 className="text-xl font-bold ml-2 md:ml-0">
+                Career Coaching Portal
+              </h1>
             </div>
             <div className="hidden md:block">
               <MainNav items={navItems} />
@@ -66,6 +72,5 @@ export default async function StudentLayout({
         <div className="max-w-6xl mx-auto px-4 sm:px-6">{children}</div>
       </main>
     </div>
-  )
+  );
 }
-

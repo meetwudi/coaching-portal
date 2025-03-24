@@ -1,16 +1,16 @@
-import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import ChangePasswordForm from "./change-password-form"
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import ChangePasswordForm from "./change-password-form";
 
 export default async function ChangePasswordPage() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
   // Redirect to login if not authenticated
   if (!session) {
-    redirect("/")
+    redirect("/");
   }
 
   return (
@@ -23,6 +23,5 @@ export default async function ChangePasswordPage() {
         <ChangePasswordForm />
       </div>
     </div>
-  )
+  );
 }
-

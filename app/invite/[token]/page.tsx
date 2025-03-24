@@ -1,35 +1,45 @@
-import { notFound, redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import InviteAcceptForm from "./invite-accept-form"
+import { notFound, redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import InviteAcceptForm from "./invite-accept-form";
 
 interface InvitePageProps {
   params: {
-    token: string
-  }
+    token: string;
+  };
 }
 
 export default async function InvitePage({ params }: InvitePageProps) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createSupabaseServerClient();
 
   // Check if user is already logged in
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
   if (session) {
-    redirect("/")
+    redirect("/");
   }
 
   // Get invitation by token
-  const { data: invitation } = await supabase.from("invitations").select("*").eq("token", params.token).single()
+  const { data: invitation } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("token", params.token)
+    .single();
 
   if (!invitation) {
-    notFound()
+    notFound();
   }
 
   // Check if invitation is expired
-  const now = new Date()
-  const expiresAt = new Date(invitation.expires_at)
+  const now = new Date();
+  const expiresAt = new Date(invitation.expires_at);
 
   if (now > expiresAt || invitation.is_accepted) {
     return (
@@ -37,11 +47,13 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invalid Invitation</CardTitle>
-            <CardDescription>This invitation has expired or has already been used.</CardDescription>
+            <CardDescription>
+              This invitation has expired or has already been used.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -50,7 +62,8 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <CardHeader>
           <CardTitle>Accept Invitation</CardTitle>
           <CardDescription>
-            You've been invited to join the Career Coaching Portal. Create your account to get started.
+            You've been invited to join the Career Coaching Portal. Create your
+            account to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,6 +71,5 @@ export default async function InvitePage({ params }: InvitePageProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

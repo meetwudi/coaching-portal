@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ export default async function StudentPage({
   params: paramsPromise,
 }: StudentPageProps) {
   const params = await paramsPromise;
-  const supabase = createServerSupabaseClient();
+  const supabase = await createSupabaseServerClient();
 
   // Get student profile
   const { data: student, error: studentError } = await supabase

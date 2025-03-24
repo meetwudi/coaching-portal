@@ -1,6 +1,5 @@
-import { createApiSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
-import type { Database } from "@/lib/database.types";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const supabase = createApiSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${new URL(request.url).origin}/update-password`,

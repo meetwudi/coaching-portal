@@ -1,10 +1,9 @@
-import { createApiSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
-import type { Database } from "@/lib/database.types";
 
 export async function POST() {
   try {
-    const supabase = createApiSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase.auth.signOut();
 

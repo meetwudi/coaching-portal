@@ -1,34 +1,44 @@
-import { notFound, redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import EditNoteForm from "./edit-note-form"
+import { notFound, redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import EditNoteForm from "./edit-note-form";
 
 interface EditNotePageProps {
   params: {
-    id: string
-  }
+    id: string;
+  };
 }
 
 export default async function EditNotePage({ params }: EditNotePageProps) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createSupabaseServerClient();
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect("/")
+    redirect("/");
   }
 
   // Get the note
-  const { data: note, error } = await supabase.from("notes").select("*").eq("id", params.id).single()
+  const { data: note, error } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("id", params.id)
+    .single();
 
   if (!note || error) {
-    notFound()
+    notFound();
   }
 
   // Check if the admin is the creator of the note
   if (note.admin_id !== session.user.id || note.created_by_student) {
-    redirect("/admin/notes")
+    redirect("/admin/notes");
   }
 
   // Get the student information
@@ -36,7 +46,7 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
     .from("profiles")
     .select("first_name, last_name")
     .eq("id", note.user_id)
-    .single()
+    .single();
 
   return (
     <div className="space-y-6">
@@ -59,6 +69,5 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

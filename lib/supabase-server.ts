@@ -1,39 +1,28 @@
-import {
-  createServerComponentClient,
-  createRouteHandlerClient,
-  createServerActionClient,
-} from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { Database } from "@/lib/database.types";
 
-export const createServerSupabaseClient = () => {
-  const cookieStore = cookies();
-  return createServerComponentClient<Database>(
-    { cookies: () => cookieStore },
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
-      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      supabaseUrl: process.env.SUPABASE_URL,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
     }
   );
-};
-
-export const createApiSupabaseClient = () => {
-  return createRouteHandlerClient<Database>(
-    { cookies },
-    {
-      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      supabaseUrl: process.env.SUPABASE_URL,
-    }
-  );
-};
-
-export const createActionSupabaseClient = () => {
-  const cookieStore = cookies();
-  return createServerActionClient<Database>(
-    { cookies: () => cookieStore },
-    {
-      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      supabaseUrl: process.env.SUPABASE_URL,
-    }
-  );
-};
+}

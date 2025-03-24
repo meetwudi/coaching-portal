@@ -1,6 +1,6 @@
 import type React from "react";
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { MainNav } from "@/components/main-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { UserNav } from "@/components/user-nav";
@@ -11,7 +11,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
     error,

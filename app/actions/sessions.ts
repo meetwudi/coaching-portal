@@ -1,6 +1,6 @@
 "use server";
 
-import { createActionSupabaseClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function updateSessions(
   sessionId: string,
@@ -8,7 +8,7 @@ export async function updateSessions(
   usedSessions: number
 ) {
   try {
-    const supabase = createActionSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("sessions")
@@ -35,7 +35,7 @@ export async function createSessions(
   usedSessions: number
 ) {
   try {
-    const supabase = createActionSupabaseClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase.from("sessions").insert({
       user_id: studentId,
